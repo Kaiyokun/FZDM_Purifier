@@ -12,103 +12,65 @@
 // @grant        none
 // ==/UserScript==
 
-function traversePages(pageUrl, pageCollection, onloadAllPages) {
-    // 返回页面导航栏 a tag collection
-    var div = $('<div/>').load(
-        pageUrl + ' div.navigation>a.button-success~a',
+function loadMangaUrl($img) {
+    // 加载漫画页面
+    var $iframe = $('<iframe />').load($img.attr('pageUrl'), () => {
+        // 执行页面动态创建漫画脚本
+        $img.attr('src', 'http://' + eval('"use strict";' +
+            $iframe.find('script:contains(" mhurl ")').text() + ';mhpicurl;'));
+    });
+}
+
+function loadNextPage($imgContainer) {
+    // 返回漫画页面导航栏
+    var $div = $('<div />').load(
+        $imgContainer.find('img:last').attr('pageUrl') +
+        ' div.navigation>a.button-success~a',
         () => {
             // 没有下一页了
-            if (div.children().length < 2) {
-                onloadAllPages(
-                    pageCollection.children(),
-                    div.find('a:last-child').attr('href') || '..');
+            if ($div.children().length < 2) {
+                $imgContainer.find('img:last')
+                    .wrap($div.find('a:last').empty());
                 return;
             }
 
-            // 添加从当前页的下一页到最后一页的链接
-            pageCollection.append(div.find('a:not(.pure-button-primary)'));
-            // 访问最后一页的链接
-            traversePages(
-                pageCollection.find('a:last-child').attr('href'),
-                pageCollection,
-                onloadAllPages);
-        });
-}
+            // 添加从当前页的下一页到最后一页的漫画
+            $div.find('a:not(.pure-button-primary)').each((_, a) => {
+                // 异步加载漫画
+                loadMangaUrl($('<img />', {
+                    alt: '第' + a.innerText.replace(/[^\d]/g, '') + '页',
+                    pageUrl: a.href
+                }).appendTo($imgContainer));
 
-function loadAllPages(onloadAllPages) {
-    // 章节首页
-    var pageCollection = $('<div/>').append(
-        $('div.navigation>a:not(.pure-button-primary)'));
-    // 遍历章节全部页面
-    traversePages(
-        pageCollection.find('a:last-child').attr('href'),
-        pageCollection,
-        onloadAllPages);
-}
+                // 单列显示每一页
+                $imgContainer.append('<br /><br />');
+            });
 
-function loadMangaUrl(pageUrl, onloadMangaUrl) {
-    // 加载漫画页面
-    var iframe = $('<iframe/>').load(
-        pageUrl,
-        () => {
-            // 执行页面动态创建漫画 img tag 脚本
-            onloadMangaUrl('http://' + eval(
-                '"use strict";' +
-                iframe.find('script:contains(" mhurl ")').text() +
-                ';mhpicurl;'));
+            // 访问最后一页
+            loadNextPage($imgContainer);
         });
 }
 
 (function showChapter() {
-    // 居中章节所有页
-    var center = $('<center/>');
-    // 加载所有页
-    loadAllPages((allPages, nextChapterUrl) => {
-        // 遍历页 a tag
-        allPages.each((_, page) => {
-            // 加载漫画页面
-            loadMangaUrl(page.href, (mangaUrl) => {
-                // 加载图片
-                center.append($('<img/>', {
-                    src: mangaUrl,
-                    alt: '第' + page.innerText.replace(/[^\d]/g, '') + '页'
-                }));
+    // 获取页面导航栏
+    var pageCollection = $('div.navigation>a:not(.pure-button-primary)');
+    // 清空原有页面并阻止未执行完的 document.write 影响新页面
+    document.write('<clear />');
 
-                // 全部图片加载完毕
-                if (allPages.length === center.children().length) {
-                    var imgMaxWidth = 0;
+    // 居中所有漫画
+    var $center = $('<center />').appendTo('body');
+    // 添加第一页到最后一页的漫画
+    pageCollection.each((_, a) => {
+        // 异步加载漫画
+        loadMangaUrl($('<img />', {
+            alt: '第' + a.innerText.replace(/[^\d]/g, '') + '页',
+            pageUrl: a.href
+        }).appendTo($center));
 
-                    center
-                        .children()
-                        // 按照页码排序
-                        .sort((a, b) => {
-                            return parseInt(a.alt.replace(/[^\d]/g, '')) -
-                                parseInt(b.alt.replace(/[^\d]/g, ''));
-                        })
-                        // 每一张图片后均换行
-                        .each((_, img) => {
-                            // 记录图片宽度的最大值
-                            imgMaxWidth = Math.max(
-                                imgMaxWidth, img.naturalWidth);
-                            // 添加图片
-                            center.append(img).append('<br /><br />');
-                        })
-                        .last()
-                        .wrap('<a href=' + nextChapterUrl + ' />');
-
-                    // 替换页面
-                    $('body').empty().append(center);
-                    // 使所有图片同宽
-                    $('img').css('width', Math.min(
-                        $(window).width(), imgMaxWidth));
-
-                    // 监听窗口变化
-                    $(window).resize(() => {
-                        $('img').css('width', Math.min(
-                            $(window).width(), imgMaxWidth));
-                    });
-                }
-            });
-        });
+        // 单列显示每一页
+        $center.append('<br /><br />');
     });
+
+    // 访问最后一页
+    loadNextPage($center);
 })();
