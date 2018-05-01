@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FZDM_Purifier
 // @namespace    https://github.com/Kaiyokun/FZDM_Purifier/
-// @version      0.3
+// @version      0.4
 // @author       Kaiyokun
 // @description  Purify your reading experience of manga at https://manhua.fzdm.com/
 // @updateURL    https://raw.githubusercontent.com/Kaiyokun/FZDM_Purifier/master/FZDM_Purifier.user.js
@@ -64,7 +64,7 @@ function loadPage($imgContainer, pageUrl) {
 
 (() => {
     // 清空原有页面并阻止未执行完的 document.write 影响新页面
-    document.write('<clear />');
+    document.write('<clear hidden />');
 
     // 递归添加所有页
     loadPage($('<center />').appendTo('body'));
