@@ -16,8 +16,9 @@ function loadMangaUrl($img) {
     // 加载漫画页面
     var $iframe = $('<iframe />').load($img.attr('pageUrl'), () => {
         // 执行页面动态创建漫画脚本
-        $img.attr('src', 'http://' + eval('"use strict";' +
-            $iframe.find('script:contains(" mhurl ")').text() + ';mhpicurl;'));
+        $img.attr('src', 'http://' + eval('"use strict";' + $iframe
+                .find('script:contains(" mhurl ")').text() + ';mhpicurl;'))
+            .css('width', $(window).width());
     });
 }
 
@@ -67,7 +68,7 @@ function loadNextPage($imgContainer) {
         src: firstPageMangaUrl,
         alt: '第1页',
         pageUrl: location.href
-    })).append('<br /><br />').appendTo('body');
+    }).css('width', $(window).width())).append('<br /><br />').appendTo('body');
 
     // 添加第二页到最后一页的漫画
     $pageCollection.each((_, a) => {
