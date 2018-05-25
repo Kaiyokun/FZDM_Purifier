@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FZDM_Purifier
 // @namespace    https://github.com/Kaiyokun/FZDM_Purifier/
-// @version      0.4
+// @version      0.5
 // @author       Kaiyokun
 // @description  Purify your reading experience of manga at https://manhua.fzdm.com/
 // @updateURL    https://raw.githubusercontent.com/Kaiyokun/FZDM_Purifier/master/FZDM_Purifier.user.js
@@ -18,7 +18,7 @@ function loadMangaUrl($img, pageUrl) {
     var $iframe = $('<iframe />').load(pageUrl, () => {
         // 执行页面动态创建漫画脚本
         $img.attr('src', 'http://' + eval('"use strict";' + $iframe
-                .find('script:contains(" mhurl ")').text() + ';mhpicurl;'))
+                .find('script:contains(" mhurl")').text() + ';mhpicurl;'))
             // 使图片与窗口同宽
             .css('width', $(window).width())
             // 手动重新加载页面
@@ -63,6 +63,9 @@ function loadPage($imgContainer, pageUrl) {
 }
 
 (() => {
+    // FIXME: 硬编码getCookie在loadMangaUrl中eval的使用
+    getCookie = (key) => { return "183.91.33.78/p1.xiaoshidi.net"; };
+
     // 清空原有页面并阻止未执行完的 document.write 影响新页面
     document.write('<clear hidden />');
 
